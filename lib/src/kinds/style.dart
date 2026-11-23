@@ -145,6 +145,16 @@ class StyleKind extends SimKind {
           slot == 3 ? r.nextInt(4) : -1,
         ));
       }
+      // Her yuvaya duruma uyan bir parça yerleştir: iyi bir kombin her zaman bulunur.
+      final o = kOccasions[occasion];
+      final good = Garment(
+        palette[r.nextInt(palette.length)],
+        slot == 0 ? pattern : 0,
+        o.$1,
+        o.$2,
+        slot == 3 ? o.$3 : -1,
+      );
+      list[r.nextInt(list.length)] = good;
       options.add(list);
     }
     final probe = StylePuzzle(d, season, occasion, palette, pattern, options, 0, 0);

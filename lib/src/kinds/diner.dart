@@ -458,7 +458,10 @@ class _DinerViewState extends State<_DinerView> with SimClock<_DinerView> {
                     Text(st(lang, kDishKeys[d]), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
                     Row(children: [
                       Icon(kStationIcons[kDishes[d].$1], size: 12),
-                      Text(' ${kDishes[d].$2.round()}s · ${kDishes[d].$3}', style: const TextStyle(fontSize: 11)),
+                      Flexible(
+                        child: Text(' ${kDishes[d].$2.round()}s · ${kDishes[d].$3}',
+                            maxLines: 1, overflow: TextOverflow.ellipsis, softWrap: false, style: const TextStyle(fontSize: 11)),
+                      ),
                     ]),
                   ]),
                 ),
