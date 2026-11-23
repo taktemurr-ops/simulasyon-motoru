@@ -395,13 +395,17 @@ class _StyleViewState extends State<_StyleView> with SimClock<_StyleView> {
   Widget _brief() {
     final o = kOccasions[z.occasion];
     return Container(
+      constraints: const BoxConstraints(maxWidth: 220),
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.9), borderRadius: BorderRadius.circular(14)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
         Row(mainAxisSize: MainAxisSize.min, children: [
           Icon(kOccasionIcons[z.occasion], size: 18),
           const SizedBox(width: 4),
-          Text(st(lang, kOccasionKeys[z.occasion]), style: const TextStyle(fontWeight: FontWeight.w800)),
+          Flexible(
+            child: Text(st(lang, kOccasionKeys[z.occasion]),
+                maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w800)),
+          ),
         ]),
         const SizedBox(height: 4),
         Row(mainAxisSize: MainAxisSize.min, children: [
@@ -479,9 +483,20 @@ class _StyleViewState extends State<_StyleView> with SimClock<_StyleView> {
       Padding(
         padding: const EdgeInsets.fromLTRB(10, 0, 10, 8),
         child: Row(children: [
-          if (!calm) Text('${st(lang, 'tries')} ${3 - tries}', style: const TextStyle(fontWeight: FontWeight.w700)),
+          if (!calm)
+            Flexible(
+              child: Text('${st(lang, 'tries')} ${3 - tries}',
+                  maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700)),
+            ),
           const Spacer(),
-          FilledButton.icon(onPressed: _show, icon: const Icon(Icons.star_outline), label: Text(st(lang, 'showLook'))),
+          Flexible(
+            flex: 3,
+            child: FilledButton.icon(
+              onPressed: _show,
+              icon: const Icon(Icons.star_outline),
+              label: Text(st(lang, 'showLook'), maxLines: 1, overflow: TextOverflow.ellipsis),
+            ),
+          ),
         ]),
       ),
     ]);
