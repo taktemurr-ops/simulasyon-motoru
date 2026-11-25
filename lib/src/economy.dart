@@ -14,6 +14,8 @@ class IdleTheme {
   static const zen = 5;
   static const bee = 6;
   static const tea = 7;
+  static const space = 8;
+  static const zoo = 9;
 }
 
 /// Geliştirme: hedef >= 0 tek üretici, -1 hepsi, -2 dokunuş, -3 otomatik
@@ -66,9 +68,9 @@ class IdlePuzzle extends SPuzzle {
     required this.events,
   });
 
-  bool get bottle => theme == IdleTheme.mine || theme == IdleTheme.factory;
+  bool get bottle => theme == IdleTheme.mine || theme == IdleTheme.factory || theme == IdleTheme.space;
   bool get harvest => theme == IdleTheme.farm;
-  bool get cleaning => theme == IdleTheme.aquarium;
+  bool get cleaning => theme == IdleTheme.aquarium || theme == IdleTheme.zoo;
 
   /// Taşıyıcı (asansör / konveyör) dışındaki üretici sayısı.
   int get producers => bottle ? p - 1 : p;
@@ -412,6 +414,8 @@ List<List<double>> _seasonTable(int theme, int p) {
     IdleTheme.zen: [1.2, 1.0, 1.1, 0.9],
     IdleTheme.bee: [1.3, 1.25, 0.9, 0.55],
     IdleTheme.tea: [1.15, 1.0, 1.05, 1.2],
+    IdleTheme.space: [1.0, 1.05, 1.0, 1.1],
+    IdleTheme.zoo: [1.2, 1.3, 1.0, 0.7],
   };
   return [
     for (var k = 0; k < p; k++)
@@ -424,7 +428,7 @@ List<List<double>> _seasonTable(int theme, int p) {
 
 /// Bir boşta bölümü kurar: ekonomi + botla ayarlanmış hedef.
 IdlePuzzle? makeIdle(int theme, int d, SeededRandom r) {
-  final bottle = theme == IdleTheme.mine || theme == IdleTheme.factory;
+  final bottle = theme == IdleTheme.mine || theme == IdleTheme.factory || theme == IdleTheme.space;
   final p = 4 + d ~/ 4 + (bottle ? 1 : 0);
   final growth = 1.13 + 0.004 * d;
   final cost0 = [for (var k = 0; k < p; k++) 10 * math.pow(11, k).toDouble() * (0.8 + 0.4 * r.nextDouble())];
@@ -444,7 +448,7 @@ IdlePuzzle? makeIdle(int theme, int d, SeededRandom r) {
   }
   upg.add(Upg(cost0[0] * 30, -2, 2));
   upg.add(Upg(cost0[2] * 60, -2, 3));
-  if (theme == IdleTheme.farm || theme == IdleTheme.aquarium) upg.add(Upg(cost0[1] * 40, -3, 1));
+  if (theme == IdleTheme.farm || theme == IdleTheme.aquarium || theme == IdleTheme.zoo) upg.add(Upg(cost0[1] * 40, -3, 1));
   upg.sort((a, b) => a.cost.compareTo(b.cost));
   final seconds = 150 + 45 * d;
   final events = <int>[];

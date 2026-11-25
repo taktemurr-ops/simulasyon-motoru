@@ -20,6 +20,8 @@ const Map<int, List<String>> kIdleEmoji = {
   IdleTheme.zen: ['🌿', '🎋', '🏮', '🌳', '🐟', '⛲'],
   IdleTheme.bee: ['🐝', '🌼', '🏡', '🍯', '🌸', '👑'],
   IdleTheme.tea: ['🍵', '☕', '🥨', '⛱️', '🎶', '🌳'],
+  IdleTheme.space: ['🛸', '☄️', '🧊', '🌙', '🪐', '⭐'],
+  IdleTheme.zoo: ['🐰', '🐧', '🦒', '🐘', '🦁', '🐼'],
 };
 
 const Map<int, IconData> kIdleMoney = {
@@ -31,6 +33,8 @@ const Map<int, IconData> kIdleMoney = {
   IdleTheme.zen: Icons.spa,
   IdleTheme.bee: Icons.hive,
   IdleTheme.tea: Icons.emoji_food_beverage,
+  IdleTheme.space: Icons.rocket_launch,
+  IdleTheme.zoo: Icons.pets,
 };
 
 class IdleKind extends SimKind {
@@ -378,7 +382,11 @@ class _IdleViewState extends State<IdleView> with SimClock<IdleView> {
           e.clean = 1;
           play.sfx(Sfx.clear);
         }),
-        child: Text('🫧 ${st(lang, 'clean')} ${(e.clean * 100).round()}%', style: const TextStyle(fontWeight: FontWeight.w700)),
+        child: Text(
+            theme == IdleTheme.zoo
+                ? '🥕 ${st(lang, 'feed')} ${(e.clean * 100).round()}%'
+                : '🫧 ${st(lang, 'clean')} ${(e.clean * 100).round()}%',
+            style: const TextStyle(fontWeight: FontWeight.w700)),
       ));
     }
     if (theme == IdleTheme.lantern) {
@@ -453,7 +461,7 @@ class _IdleViewState extends State<IdleView> with SimClock<IdleView> {
   String _upgSymbol(Upg u) => switch (u.target) {
         -1 => '✨',
         -2 => '👆',
-        -3 => z.harvest ? '🚜' : '🫧',
+        -3 => z.harvest ? '🚜' : (theme == IdleTheme.zoo ? '🥕' : '🫧'),
         _ => idleEmoji(theme, u.target, z),
       };
 
@@ -569,6 +577,10 @@ void paintIdle(Canvas c, Size s, int theme, IdlePuzzle z, Econ e, int season,
       _paintBee(c, s, z, e, season);
     case IdleTheme.tea:
       _paintTea(c, s, z, e, season);
+    case IdleTheme.space:
+      _paintSpace(c, s, z, e, season);
+    case IdleTheme.zoo:
+      _paintZoo(c, s, z, e, season);
     default:
       _paintZen(c, s, z, e, season, buds, rake);
   }
@@ -1043,5 +1055,128 @@ void _paintTea(Canvas c, Size s, IdlePuzzle z, Econ e, int season) {
   c.drawRRect(RRect.fromRectAndRadius(Rect.fromCenter(center: Offset(sx, sy), width: 22, height: 30), const Radius.circular(6)),
       fill(const Color(0xFFC9A227)));
   c.drawCircle(Offset(sx, sy - 18), 6, fill(const Color(0xFFB58A1C)));
+  paintSeasonParticles(c, s, season, e.t, count: 8);
+}
+
+/// Boşta uzay madenciliği: yıldızlı gökyüzü, dönen asteroitler, madenci
+/// sondalar ve kargo mekiği. Üretici arttıkça sondalar ve kuşaklar çoğalır.
+void _paintSpace(Canvas c, Size s, IdlePuzzle z, Econ e, int season) {
+  final bg = Rect.fromLTWH(0, 0, s.width, s.height);
+  c.drawRect(
+      bg,
+      Paint()
+        ..shader = const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF0B1030), Color(0xFF1C1650), Color(0xFF2E1E5C)],
+        ).createShader(bg));
+  // yıldızlar (sezona göre bulutsu rengi değişir)
+  for (var i = 0; i < 60; i++) {
+    final x = (i * 73.13 + 11) % s.width;
+    final y = (i * 41.77 + 7) % s.height;
+    final a = 0.35 + 0.65 * (0.5 + 0.5 * math.sin(e.t * 1.5 + i)).abs();
+    c.drawCircle(Offset(x, y), i % 7 == 0 ? 1.8 : 1.0, fill(Colors.white.withValues(alpha: a)));
+  }
+  const neb = [Color(0xFF6FD3C1), Color(0xFFE88DB0), Color(0xFFF2A65A), Color(0xFF8FB8F2)];
+  c.drawCircle(Offset(s.width * 0.78, s.height * 0.22), s.height * 0.28, fill(neb[season % 4].withValues(alpha: 0.10)));
+  // ana gezegen
+  final pc = Offset(s.width * 0.18, s.height * 1.05);
+  c.drawCircle(pc, s.height * 0.42, fill(const Color(0xFF3B5BA5)));
+  c.drawCircle(pc.translate(-12, -10), s.height * 0.38, fill(const Color(0xFF5577C4).withValues(alpha: 0.6)));
+  // asteroit kuşağı: her üretici türü bir yörünge
+  final cx = s.width * 0.6, cy = s.height * 0.5;
+  final rocks = z.producers;
+  for (var k = 0; k < rocks; k++) {
+    final r = 26.0 + k * (math.min(s.width, s.height) * 0.42 - 26) / math.max(1, rocks);
+    c.drawOval(Rect.fromCenter(center: Offset(cx, cy), width: r * 2, height: r * 1.1),
+        stroke(Colors.white.withValues(alpha: 0.08), 1));
+    final count = math.min<int>(1 + e.n[k] ~/ 4, 7);
+    for (var j = 0; j < count; j++) {
+      final a = e.t * (0.5 / (k + 1)) + j * math.pi * 2 / count + k;
+      final p = Offset(cx + r * math.cos(a), cy + r * 0.55 * math.sin(a));
+      final size = 4.0 + (k % 3) * 2;
+      c.drawCircle(p, size, fill(Color.lerp(const Color(0xFF8C7A6B), const Color(0xFFB9E3F2), k / math.max(1, rocks))!));
+      if (e.n[k] > 0) c.drawCircle(p.translate(size * 0.3, -size * 0.3), size * 0.35, fill(const Color(0xFFFFE08A)));
+    }
+  }
+  // kargo mekiği: taşıma kapasitesi doldukça gidiş-geliş hızlanır
+  if (z.bottle) {
+    final cap = e.capOf(e.n[z.p - 1]);
+    final prod = e.prodOf(e.n);
+    final load = cap <= 0 ? 0.0 : clampD(prod / cap, 0, 1);
+    final u = 0.5 + 0.5 * math.sin(e.t * (0.6 + 0.6 * load));
+    final p = Offset.lerp(Offset(s.width * 0.25, s.height * 0.72), Offset(cx, cy), u)!;
+    final body = Path()
+      ..moveTo(p.dx + 12, p.dy)
+      ..lineTo(p.dx - 8, p.dy - 6)
+      ..lineTo(p.dx - 8, p.dy + 6)
+      ..close();
+    c.drawPath(body, fill(const Color(0xFFE6E9F0)));
+    c.drawCircle(p.translate(-10, 0), 3 + 2 * load, fill(const Color(0xFFFF9F45).withValues(alpha: 0.8)));
+  }
+  // kuyruklu yıldız
+  final ct = (e.t * 0.12) % 1.0;
+  final cp = Offset(s.width * (1.1 - ct * 1.3), s.height * (0.1 + ct * 0.35));
+  c.drawLine(cp, cp.translate(26, -10), stroke(Colors.white.withValues(alpha: 0.35), 3));
+  c.drawCircle(cp, 3, fill(Colors.white));
+}
+
+/// Hayvanat bahçesi: çitli alanlar, havuz, ağaçlar ve ziyaretçiler. Her hayvan
+/// türü kendi alanında gezinir; aç kaldıklarında alan solar.
+void _paintZoo(Canvas c, Size s, IdlePuzzle z, Econ e, int season) {
+  paintSky(c, s, season, groundAt: 0.38);
+  final look = kSeasonLooks[season];
+  final gy = s.height * 0.38;
+  c.drawRect(Rect.fromLTWH(0, gy, s.width, s.height - gy), fill(Color.lerp(const Color(0xFF9CC77A), look.ground, 0.4)!));
+  // patika
+  final path = Path()
+    ..moveTo(0, s.height * 0.92)
+    ..quadraticBezierTo(s.width * 0.5, s.height * 0.62, s.width, s.height * 0.9);
+  c.drawPath(path, stroke(const Color(0xFFE3CFA4), 16));
+  final pens = z.producers;
+  final cols = pens <= 4 ? pens : (pens + 1) ~/ 2;
+  final rows = pens <= 4 ? 1 : 2;
+  final pw = s.width / math.max(1, cols);
+  final ph = (s.height * 0.5 - gy * 0.1) / rows;
+  final happy = 0.4 + 0.6 * e.clean;
+  const groundOf = [
+    Color(0xFFB7D98B), // tavşan: çimen
+    Color(0xFFBFE3F2), // penguen: buz
+    Color(0xFFE3CC8A), // zürafa: savan
+    Color(0xFFC9B48A), // fil: toprak
+    Color(0xFFD9B86A), // aslan: kaya
+    Color(0xFF9CCB8F), // panda: bambu
+  ];
+  for (var k = 0; k < pens; k++) {
+    final x0 = pw * (k % cols) + 6;
+    final y0 = gy + 8 + ph * (k ~/ cols);
+    final r = Rect.fromLTWH(x0, y0, pw - 12, ph - 10);
+    c.drawRRect(RRect.fromRectAndRadius(r, const Radius.circular(10)),
+        fill(Color.lerp(const Color(0xFFBDB29E), groundOf[k % 6], happy)!.withValues(alpha: e.n[k] > 0 ? 1 : 0.45)));
+    // çit
+    c.drawRRect(RRect.fromRectAndRadius(r, const Radius.circular(10)), stroke(const Color(0xFF8A5A2B), 2));
+    for (var px = r.left + 8; px < r.right; px += 12) {
+      c.drawLine(Offset(px, r.bottom - 6), Offset(px, r.bottom + 2), stroke(const Color(0xFF8A5A2B), 2));
+    }
+    // hayvanlar (her 5 hayvan için bir simge, en çok 4)
+    final n = e.n[k] == 0 ? 0 : math.min<int>(1 + e.n[k] ~/ 5, 4);
+    for (var j = 0; j < n; j++) {
+      final ph2 = e.t * (0.4 + 0.1 * j) + j * 2.1 + k;
+      final ax = r.left + r.width * (0.2 + 0.6 * (0.5 + 0.5 * math.sin(ph2)));
+      final ay = r.top + r.height * (0.35 + 0.3 * (0.5 + 0.5 * math.cos(ph2 * 0.7)));
+      drawLabel(c, kIdleEmoji[IdleTheme.zoo]![k % 6], Offset(ax, ay), math.min(22, r.height * 0.4), Colors.black);
+    }
+  }
+  // ziyaretçiler patikada yürür; gelir arttıkça kalabalık büyür
+  final people = math.min<int>(2 + _units(e) ~/ 3, 16);
+  const shirt = [Color(0xFFE0735A), Color(0xFF3B86A8), Color(0xFFD9A441), Color(0xFF8A5BA6)];
+  for (var i = 0; i < people; i++) {
+    final u = ((e.t * 0.03 + i / people) % 1.0);
+    final x = u * s.width;
+    final y = s.height * (0.92 - 0.6 * u * (1 - u) * 1.2) - 6;
+    c.drawCircle(Offset(x, y - 9), 3.5, fill(const Color(0xFFF1C9A5)));
+    c.drawRRect(RRect.fromRectAndRadius(Rect.fromCenter(center: Offset(x, y), width: 7, height: 10), const Radius.circular(3)),
+        fill(shirt[i % shirt.length]));
+  }
   paintSeasonParticles(c, s, season, e.t, count: 8);
 }

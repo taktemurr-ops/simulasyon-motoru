@@ -30,6 +30,8 @@ const Map<String, SimKind> kSimKinds = {
   'cay': IdleKind('cay', IdleTheme.tea),
   'lale': TulipKind(),
   'kervan': CaravanKind(),
+  'uzay': IdleKind('uzay', IdleTheme.space),
+  'hayvanat': IdleKind('hayvanat', IdleTheme.zoo),
 };
 
 SimRules simRulesFor(String gameId, String kind) => simRules(gameId, kSimKinds[kind]!);
