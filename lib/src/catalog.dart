@@ -3,13 +3,17 @@ import 'economy.dart';
 import 'kinds/caravan.dart';
 import 'kinds/colony.dart';
 import 'kinds/diner.dart';
+import 'kinds/grocer.dart';
 import 'kinds/idle.dart';
 import 'kinds/kitchen.dart';
 import 'kinds/merge.dart';
 import 'kinds/pet.dart';
+import 'kinds/renovate.dart';
+import 'kinds/shine.dart';
 import 'kinds/style.dart';
 import 'kinds/town.dart';
 import 'kinds/tulip.dart';
+import 'kinds/village.dart';
 
 /// Boşta ve simülasyon oyun türleri.
 const Map<String, SimKind> kSimKinds = {
@@ -32,6 +36,10 @@ const Map<String, SimKind> kSimKinds = {
   'kervan': CaravanKind(),
   'uzay': IdleKind('uzay', IdleTheme.space),
   'hayvanat': IdleKind('hayvanat', IdleTheme.zoo),
+  'bakkal': GrocerKind(),
+  'hayat': VillageKind(),
+  'parlat': ShineKind(),
+  'yenile': RenovateKind(),
 };
 
 SimRules simRulesFor(String gameId, String kind) => simRules(gameId, kSimKinds[kind]!);

@@ -156,6 +156,41 @@ int mergeReach(MergePuzzle z, int limit) {
   return -1;
 }
 
+/// Liman Pazarı modu: sipariş panosundaki malların teslim ödülü.
+int limanReward(int tier) => (6 * math.pow(2.6, tier - 1)).round();
+
+/// Liman Pazarı modu: botun siparişleri sırayla teslim ederek bitirdiği saniye (-1: yetişmedi).
+int limanReach(MergePuzzle z, List<int> orders) {
+  final s = MergeSim(z);
+  var k = 0;
+  for (var i = 1; i <= z.limit; i++) {
+    s.botSecond();
+    while (k < orders.length) {
+      final j = s.grid.indexOf(orders[k]);
+      if (j < 0) break;
+      s.grid[j] = 0;
+      s.coins += limanReward(orders[k]);
+      k++;
+    }
+    if (k >= orders.length) return i;
+  }
+  return -1;
+}
+
+/// Liman Pazarı siparişleri: bölümden belirlenimci üretilir, botun
+/// yetişemediği son siparişler atılır (en az bir sipariş kalır).
+List<int> limanOrders(MergePuzzle z) {
+  final r = SeededRandom(mixSeed([z.cols, z.rows, z.goalTier, z.par, (z.c0 * 1000).round(), z.season0, 7717]));
+  final n = 3 + z.goalTier ~/ 2;
+  var orders = [for (var i = 0; i < n; i++) 2 + r.nextInt(math.max(1, z.goalTier - 2))];
+  while (orders.length > 1 && limanReach(z, orders) < 0) {
+    orders = orders.sublist(0, orders.length - 1);
+  }
+  return orders;
+}
+
+const int kLimanChapters = 6;
+
 class MergeKind extends SimKind {
   @override
   String get id => 'birlestir';
@@ -189,6 +224,7 @@ class MergeKind extends SimKind {
         ...super.stats,
         const GameStat('merges', 'Birleştirme', 'Merges', scale: 50),
         const GameStat('prestige', 'Sırlama', 'Glazings', scale: 2),
+        const GameStat('orders', 'Liman siparişi', 'Harbor orders', scale: 20),
       ];
 
   @override
@@ -251,6 +287,12 @@ class _MergeViewState extends State<_MergeView> with SimClock<_MergeView> {
   double noteUntil = -1;
   double armUntil = -1;
 
+  /// Liman Pazarı modu (merge-2 + sipariş panosu + hikâye).
+  bool harbor = false;
+  late final List<int> orders = limanOrders(z);
+  late final int harborPar = math.max(1, limanReach(z, orders));
+  int delivered = 0;
+
   SimPlay get play => widget.play;
   String get lang => play.lang;
 
@@ -270,6 +312,7 @@ class _MergeViewState extends State<_MergeView> with SimClock<_MergeView> {
       m.glaze = intOf(r['gl'], 0);
       m.merges = intOf(r['mg'], 0);
       m.prestiges = intOf(r['pr'], 0);
+      delivered = intOf(r['lo'], 0);
       seconds = intOf(r['sec'], 0);
       final away = play.awaySeconds();
       if (away >= 20) {
@@ -283,6 +326,7 @@ class _MergeViewState extends State<_MergeView> with SimClock<_MergeView> {
       if (!mounted) return;
       setState(() {
         calm = play.zenMode || SimPrefs.calm;
+        harbor = SimPrefs.getBool('merge_harbor');
         m.extra = SimPrefs.renownMul(play.gameId);
       });
     });
@@ -299,6 +343,7 @@ class _MergeViewState extends State<_MergeView> with SimClock<_MergeView> {
         'gl': m.glaze,
         'mg': m.merges,
         'pr': m.prestiges,
+        'lo': delivered,
         'sec': seconds,
       });
 
@@ -310,7 +355,24 @@ class _MergeViewState extends State<_MergeView> with SimClock<_MergeView> {
       saveIn = 5;
       _save();
     }
-    if (m.levelMax >= z.goalTier) _win();
+    if (!harbor && m.levelMax >= z.goalTier) _win();
+  }
+
+  void _deliver() {
+    if (ended || delivered >= orders.length) return;
+    final j = m.grid.indexOf(orders[delivered]);
+    setState(() {
+      if (j < 0) {
+        play.sfx(Sfx.error);
+        return;
+      }
+      m.grid[j] = 0;
+      if (sel == j) sel = -1;
+      m.coins += limanReward(orders[delivered]);
+      delivered++;
+      play.sfx(Sfx.coin);
+    });
+    if (delivered >= orders.length) _win();
   }
 
   void _win() {
@@ -319,10 +381,16 @@ class _MergeViewState extends State<_MergeView> with SimClock<_MergeView> {
     stopLoop();
     _save();
     play.sfx(Sfx.win);
-    play.win(stars: starsByTime(seconds, z.par), calm: calm, score: m.levelMax * 1000 + m.merges, seconds: seconds, stats: {
-      'merges': m.merges,
-      'prestige': m.prestiges,
-    });
+    play.win(
+        stars: starsByTime(seconds, harbor ? harborPar : z.par),
+        calm: calm,
+        score: m.levelMax * 1000 + m.merges + delivered * 500,
+        seconds: seconds,
+        stats: {
+          'merges': m.merges,
+          'prestige': m.prestiges,
+          if (harbor) 'orders': delivered,
+        });
   }
 
   void _tapCell(int i) {
@@ -342,7 +410,7 @@ class _MergeViewState extends State<_MergeView> with SimClock<_MergeView> {
       if (m.merge(sel, i)) {
         play.sfx(m.grid[i] >= 6 ? Sfx.combo : Sfx.clear);
         sel = -1;
-        if (m.levelMax >= z.goalTier) _win();
+        if (!harbor && m.levelMax >= z.goalTier) _win();
       } else if (m.move(sel, i)) {
         play.sfx(Sfx.place);
         sel = -1;
@@ -380,14 +448,18 @@ class _MergeViewState extends State<_MergeView> with SimClock<_MergeView> {
       );
     });
     final gain = m.glazeGain;
-    final banner = noteUntil > m.t && note.isNotEmpty ? SNote(note, icon: Icons.nightlight_round) : null;
+    final banner = harbor
+        ? _harborBoard()
+        : (noteUntil > m.t && note.isNotEmpty ? SNote(note, icon: Icons.nightlight_round) : null);
     return SimFrame(
       play: play,
       moneyIcon: Icons.savings,
       money: fmtNum(m.coins),
       sub: '+${fmtNum(m.income)}${st(lang, 'perSec')}',
-      goalText: st(lang, 'goalTier').replaceAll('{0}', '${z.goalTier}'),
-      progress: m.levelMax / z.goalTier,
+      goalText: harbor
+          ? '${st(lang, 'lOrders')} $delivered/${orders.length}'
+          : st(lang, 'goalTier').replaceAll('{0}', '${z.goalTier}'),
+      progress: harbor ? delivered / orders.length : m.levelMax / z.goalTier,
       season: season,
       calm: calm,
       onCalm: (v) => setState(() {
@@ -423,7 +495,7 @@ class _MergeViewState extends State<_MergeView> with SimClock<_MergeView> {
               onTap: () => setState(() {
                 if (m.mergeOne()) {
                   play.sfx(Sfx.clear);
-                  if (m.levelMax >= z.goalTier) _win();
+                  if (!harbor && m.levelMax >= z.goalTier) _win();
                 }
               }),
               tooltip: st(lang, 'merge'),
@@ -432,6 +504,21 @@ class _MergeViewState extends State<_MergeView> with SimClock<_MergeView> {
           ]),
           const SizedBox(height: 6),
           Row(children: [
+            SChip(
+              selected: harbor,
+              tooltip: st(lang, 'lHarbor'),
+              onTap: () => setState(() {
+                harbor = !harbor;
+                SimPrefs.setBool('merge_harbor', harbor);
+                play.sfx(Sfx.tap);
+              }),
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                const Icon(Icons.anchor, size: 16),
+                const SizedBox(width: 4),
+                Text(st(lang, 'lHarbor'), style: const TextStyle(fontSize: 12)),
+              ]),
+            ),
+            const SizedBox(width: 6),
             SBadge(Icons.local_fire_department, '${st(lang, 'kiln')} ${m.spawnEvery.toStringAsFixed(1)}s'),
             const SizedBox(width: 6),
             if (m.glaze > 0) SBadge(Icons.auto_awesome, '×${(1 + 0.5 * m.glaze).toStringAsFixed(1)}'),
@@ -458,6 +545,20 @@ class _MergeViewState extends State<_MergeView> with SimClock<_MergeView> {
           ]),
         ]),
       ),
+    );
+  }
+}
+
+extension on _MergeViewState {
+  Widget _harborBoard() {
+    if (delivered >= orders.length) return SNote(st(lang, 'lStory${kLimanChapters - 1}'), icon: Icons.celebration);
+    final tier = orders[delivered];
+    final have = m.grid.contains(tier);
+    final chapter = (delivered * kLimanChapters) ~/ orders.length;
+    return SNote(
+      '${st(lang, 'lStory$chapter')} · ${st(lang, 'lWant').replaceAll('{0}', '$tier')} (+${fmtNum(limanReward(tier))})',
+      icon: have ? Icons.sailing : Icons.anchor,
+      onTap: _deliver,
     );
   }
 }
