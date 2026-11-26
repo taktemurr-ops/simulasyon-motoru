@@ -477,7 +477,8 @@ class _GrocerViewState extends State<_GrocerView> with SimClock<_GrocerView> {
             crossAxisCount: 3,
             mainAxisSpacing: 6,
             crossAxisSpacing: 6,
-            childAspectRatio: 2.1,
+            // Büyük yazıda kutu yazıyla birlikte uzar (ad ve stok kesilmez).
+            childAspectRatio: 2.1 / MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 1.6),
             children: [
               for (var i = 0; i < z.goods.length; i++)
                 SChip(
