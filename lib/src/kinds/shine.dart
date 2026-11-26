@@ -139,7 +139,7 @@ class ShineKind extends SimKind {
   SPuzzle? make(int d, SeededRandom r) {
     final obj = r.nextInt(kShineShapes.length);
     final cols = 8 + d ~/ 3, rows = 7 + d ~/ 3;
-    final kinds = 1 + math.min(3, d ~/ 2);
+    final kinds = 1 + math.min<int>(3, d ~/ 2);
     final pool = [1, 2, 3, 4];
     r.shuffle(pool);
     final use = pool.take(kinds).toList();
@@ -257,7 +257,7 @@ class _ShineViewState extends State<_ShineView> {
     play.sfx(Sfx.win);
     // Rahatlatıcı tür: yıldız yalnız fırça darbesi sayısına bakar, kayıp yok.
     final stars = calm || strokes <= z.par ? 3 : (strokes <= z.par * 2 ? 2 : 1);
-    play.win(stars: stars, calm: calm, score: 1000 + 50 * math.max(0, 3 * z.par - strokes), seconds: watch.elapsed.inSeconds,
+    play.win(stars: stars, calm: calm, score: 1000 + 50 * math.max<int>(0, 3 * z.par - strokes), seconds: watch.elapsed.inSeconds,
         stats: {'scrubs': s.scrubs, 'shined': 1});
   }
 

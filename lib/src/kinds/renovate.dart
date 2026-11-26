@@ -94,7 +94,7 @@ class RenovateKind extends SimKind {
 
   @override
   SPuzzle? make(int d, SeededRandom r) {
-    final cols = 4 + math.min(3, (d + 1) ~/ 3), rows = 4 + math.min(3, d ~/ 3);
+    final cols = 4 + math.min<int>(3, (d + 1) ~/ 3), rows = 4 + math.min<int>(3, d ~/ 3);
     final blocked = List<bool>.filled(cols * rows, false);
     // kapı önü (alt kenarda) ve 0-2 sütun
     final door = r.nextInt(cols);
@@ -284,10 +284,10 @@ class _RenoViewState extends State<_RenoView> {
     final unlocked = 1 + budget ~/ 3;
     setState(() {
       if (isWall) {
-        wall = (wall + 1) % math.min(kWallColors.length, unlocked);
+        wall = (wall + 1) % math.min<int>(kWallColors.length, unlocked);
         SimPrefs.setInt('reno_wall_${play.gameId}', wall);
       } else {
-        floor = (floor + 1) % math.min(kFloorColors.length, unlocked);
+        floor = (floor + 1) % math.min<int>(kFloorColors.length, unlocked);
         SimPrefs.setInt('reno_floor_${play.gameId}', floor);
       }
       play.sfx(Sfx.tap);
