@@ -7,6 +7,7 @@ import 'package:studio_core/core/rng.dart';
 import 'package:studio_core/core/stats.dart';
 
 import '../core.dart';
+import '../studio_chrome.dart';
 import '../texts.dart';
 
 // =================================================================== Mutfak (yemek yapma: sırala ve pişir)
@@ -353,7 +354,11 @@ class _KitchenViewState extends State<_KitchenView> with SimClock<_KitchenView> 
     final scheme = Theme.of(context).colorScheme;
     final timeline = [for (var i = 0; i < rc.steps.length; i++) if (done[i]) i];
     final scene = Container(
-      decoration: BoxDecoration(color: const Color(0xFFF6EBDD), borderRadius: BorderRadius.circular(18)),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: StudioLook.of(context).accent.withValues(alpha: 0.45), width: 1.2),
+      ),
       padding: const EdgeInsets.all(8),
       child: Column(children: [
         Row(children: [
@@ -368,7 +373,7 @@ class _KitchenViewState extends State<_KitchenView> with SimClock<_KitchenView> 
               ),
             ]),
           ),
-          if (!calm) Text('❤' * hearts, style: const TextStyle(fontSize: 16, color: Color(0xFFC8553D))),
+          if (!calm) Text('❤' * hearts, style: const TextStyle(fontSize: 16, color: StudioLook.bad)),
         ]),
         const SizedBox(height: 6),
         SizedBox(

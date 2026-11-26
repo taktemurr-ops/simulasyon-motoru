@@ -7,6 +7,7 @@ import 'package:studio_core/core/rng.dart';
 import 'package:studio_core/core/stats.dart';
 
 import '../core.dart';
+import '../studio_chrome.dart';
 import '../texts.dart';
 import 'idle.dart' show numOf, intOf;
 
@@ -364,7 +365,15 @@ class _PetViewState extends State<_PetView> with SimClock<_PetView> {
                     padding: const EdgeInsets.symmetric(horizontal: 3),
                     child: FilledButton.tonal(
                       onPressed: p.sleeping ? null : () => _act(a),
-                      style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6)),
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+                        backgroundColor: Colors.white.withValues(alpha: 0.10),
+                        foregroundColor: Colors.white,
+                        disabledBackgroundColor: Colors.white.withValues(alpha: 0.05),
+                        disabledForegroundColor: Colors.white54,
+                        side: BorderSide(color: StudioLook.of(context).accent.withValues(alpha: 0.45)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                      ),
                       child: Column(mainAxisSize: MainAxisSize.min, children: [
                         Icon(kPetActIcons[a], size: 22),
                         FittedBox(child: Text(st(lang, kPetActKeys[a]), style: const TextStyle(fontSize: 12))),

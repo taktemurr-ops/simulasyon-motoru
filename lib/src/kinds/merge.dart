@@ -7,6 +7,7 @@ import 'package:studio_core/core/rng.dart';
 import 'package:studio_core/core/stats.dart';
 
 import '../core.dart';
+import '../studio_chrome.dart';
 import '../texts.dart';
 import 'idle.dart' show numOf, intOf, intsOf;
 
@@ -406,14 +407,15 @@ class _MergeViewState extends State<_MergeView> with SimClock<_MergeView> {
         child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
           Row(children: [
             Expanded(
-              child: FilledButton.icon(
+              child: StudioButton(
                 onPressed: m.freeCell() >= 0 && m.cost <= m.coins
                     ? () => setState(() {
                           if (m.buy()) play.sfx(Sfx.place);
                         })
                     : null,
-                icon: const Icon(Icons.add_circle_outline),
-                label: FittedBox(child: Text('${st(lang, 'newPot')}  ${fmtNum(m.cost)}')),
+                icon: Icons.add_circle_outline,
+                fontSize: 15,
+                label: '${st(lang, 'newPot')}  ${fmtNum(m.cost)}',
               ),
             ),
             const SizedBox(width: 8),
