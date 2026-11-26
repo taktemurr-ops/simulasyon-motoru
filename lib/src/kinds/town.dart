@@ -7,6 +7,7 @@ import 'package:studio_core/core/rng.dart';
 import 'package:studio_core/core/stats.dart';
 
 import '../core.dart';
+import '../studio_chrome.dart';
 import '../texts.dart';
 import 'idle.dart' show numOf, intOf, intsOf;
 
@@ -426,10 +427,10 @@ class _TownViewState extends State<_TownView> with SimClock<_TownView> {
               selected: pick == k,
               onTap: () => setState(() => pick = k),
               child: Row(mainAxisSize: MainAxisSize.min, children: [
-                Icon(kTownIcons[k], size: 18, color: kTownColors[k]),
+                Icon(kTownIcons[k], size: 18, color: studioLift(kTownColors[k])),
                 const SizedBox(width: 4),
                 Text('${st(lang, kTownKeys[k])} ${fmtNum(m.cost(k))}',
-                    style: TextStyle(fontSize: 13, color: m.cost(k) <= m.coins ? null : Colors.white54)),
+                    style: TextStyle(fontSize: 13, color: m.cost(k) <= m.coins ? null : const Color(0xFFFFC9C0))),
               ]),
             ),
         ]),
