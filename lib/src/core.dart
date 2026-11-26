@@ -551,18 +551,26 @@ class SChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final c = color ?? scheme.surface;
+    final look = StudioLook.of(context);
+    final c = color ?? Color.lerp(look.card, Colors.white, 0.08)!;
+    final bg = selected ? Color.lerp(c, look.accent, 0.35)! : c;
+    final fg = bg.computeLuminance() > 0.4 ? const Color(0xFF22303F) : Colors.white;
     final w = Material(
-      color: selected ? Color.lerp(c, scheme.primary, 0.35) : c,
+      color: bg,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
-        side: BorderSide(color: selected ? scheme.primary : Colors.black12, width: selected ? 2.5 : 1),
+        side: BorderSide(color: selected ? look.accent : Colors.white24, width: selected ? 2.5 : 1),
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
         onTap: onTap,
-        child: Padding(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7), child: child),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+          child: IconTheme.merge(
+            data: IconThemeData(color: fg),
+            child: DefaultTextStyle.merge(style: TextStyle(color: fg, fontWeight: FontWeight.w700), child: child),
+          ),
+        ),
       ),
     );
     final tt = tooltip;
@@ -579,14 +587,19 @@ class SBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final bg = color ?? Colors.black.withValues(alpha: 0.45);
+    final fg = color != null && color!.computeLuminance() > 0.4 ? const Color(0xFF22303F) : Colors.white;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: (color ?? scheme.surface).withValues(alpha: 0.9), borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(
+        color: color == null ? bg : bg.withValues(alpha: 0.92),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white24),
+      ),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
-        Icon(icon, size: 16),
+        Icon(icon, size: 16, color: fg),
         const SizedBox(width: 4),
-        Text(text, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+        Text(text, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: fg)),
       ]),
     );
   }
@@ -700,7 +713,6 @@ class _SimFrameState extends State<SimFrame> {
   Widget build(BuildContext context) {
     final w = widget;
     final lang = w.play.lang;
-    final scheme = Theme.of(context).colorScheme;
     final sceneStack = Stack(fit: StackFit.expand, children: [w.scene, _decorLayer(editing: false)]);
     if (photo) {
       return Column(children: [
@@ -773,15 +785,19 @@ class _SimFrameState extends State<SimFrame> {
         margin: const EdgeInsets.fromLTRB(8, 4, 8, 0),
         padding: const EdgeInsets.symmetric(horizontal: 8),
         height: 50,
-        decoration: BoxDecoration(color: scheme.surface.withValues(alpha: 0.94), borderRadius: BorderRadius.circular(16)),
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.28),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: StudioLook.of(context).accent.withValues(alpha: 0.45), width: 1.2),
+        ),
         child: Row(children: [
-          Icon(w.moneyIcon, size: 22, color: const Color(0xFFD9A441)),
+          Icon(w.moneyIcon, size: 22, color: StudioLook.gold),
           const SizedBox(width: 4),
           Flexible(
             child: FittedBox(
               fit: BoxFit.scaleDown,
               alignment: AlignmentDirectional.centerStart,
-              child: Text(w.money, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 20)),
+              child: Text(w.money, style: TextStyle(fontWeight: FontWeight.w900, fontSize: 20, color: StudioLook.of(context).number)),
             ),
           ),
           if (w.sub.isNotEmpty) ...[
@@ -790,7 +806,7 @@ class _SimFrameState extends State<SimFrame> {
               child: FittedBox(
                 fit: BoxFit.scaleDown,
                 alignment: AlignmentDirectional.centerStart,
-                child: Text(w.sub, style: TextStyle(color: scheme.onSurface.withValues(alpha: 0.7), fontSize: 13)),
+                child: Text(w.sub, style: const TextStyle(color: kStudioSubtle, fontSize: 13, fontWeight: FontWeight.w600)),
               ),
             ),
           ],
@@ -843,19 +859,26 @@ class SNote extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final look = StudioLook.of(context);
+    final bg = color ?? Color.lerp(look.base, look.accent, 0.30)!;
+    final fg = bg.computeLuminance() > 0.4 ? const Color(0xFF22303F) : Colors.white;
     return Material(
-      color: color ?? scheme.secondaryContainer,
-      borderRadius: BorderRadius.circular(12),
+      color: bg,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: BorderSide(color: look.accent.withValues(alpha: 0.55)),
+      ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           child: Row(children: [
-            Icon(icon, size: 18),
+            Icon(icon, size: 18, color: fg),
             const SizedBox(width: 6),
-            Expanded(child: Text(text, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13))),
+            Expanded(
+                child: Text(text,
+                    maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: fg))),
           ]),
         ),
       ),

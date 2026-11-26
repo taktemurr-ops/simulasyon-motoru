@@ -429,7 +429,7 @@ class _TownViewState extends State<_TownView> with SimClock<_TownView> {
                 Icon(kTownIcons[k], size: 18, color: kTownColors[k]),
                 const SizedBox(width: 4),
                 Text('${st(lang, kTownKeys[k])} ${fmtNum(m.cost(k))}',
-                    style: TextStyle(fontSize: 13, color: m.cost(k) <= m.coins ? null : Colors.black38)),
+                    style: TextStyle(fontSize: 13, color: m.cost(k) <= m.coins ? null : Colors.white54)),
               ]),
             ),
         ]),

@@ -7,6 +7,7 @@ import 'package:studio_core/core/rng.dart';
 import 'package:studio_core/core/stats.dart';
 
 import '../core.dart';
+import '../studio_chrome.dart';
 import '../texts.dart';
 
 // =================================================================== Lokanta (restoran işletme, zaman yönetimi)
@@ -415,7 +416,11 @@ class _DinerViewState extends State<_DinerView> with SimClock<_DinerView> {
 
   Widget _pass() {
     return Container(
-      decoration: BoxDecoration(color: const Color(0xFFF7F0E3), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFB9AE9B))),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: StudioLook.of(context).accent.withValues(alpha: 0.45), width: 1.2),
+      ),
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Row(children: [
         const Icon(Icons.room_service, size: 20),
