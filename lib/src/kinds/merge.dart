@@ -501,9 +501,7 @@ class _MergeViewState extends State<_MergeView> with SimClock<_MergeView> {
               tooltip: st(lang, 'merge'),
               child: const Icon(Icons.merge_type),
             ),
-          ]),
-          const SizedBox(height: 6),
-          Row(children: [
+            const SizedBox(width: 6),
             SChip(
               selected: harbor,
               tooltip: st(lang, 'lHarbor'),
@@ -512,13 +510,11 @@ class _MergeViewState extends State<_MergeView> with SimClock<_MergeView> {
                 SimPrefs.setBool('merge_harbor', harbor);
                 play.sfx(Sfx.tap);
               }),
-              child: Row(mainAxisSize: MainAxisSize.min, children: [
-                const Icon(Icons.anchor, size: 16),
-                const SizedBox(width: 4),
-                Text(st(lang, 'lHarbor'), style: const TextStyle(fontSize: 12)),
-              ]),
+              child: const Icon(Icons.anchor, size: 18),
             ),
-            const SizedBox(width: 6),
+          ]),
+          const SizedBox(height: 6),
+          Row(children: [
             SBadge(Icons.local_fire_department, '${st(lang, 'kiln')} ${m.spawnEvery.toStringAsFixed(1)}s'),
             const SizedBox(width: 6),
             if (m.glaze > 0) SBadge(Icons.auto_awesome, '×${(1 + 0.5 * m.glaze).toStringAsFixed(1)}'),
