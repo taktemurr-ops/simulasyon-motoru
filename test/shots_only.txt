@@ -1,1 +1,1 @@
-oyun-yemek-yapma,oyun-basit-sehir-kurma,oyun-bosta-tiklayici
+oyun-basit-sehir-kurma
