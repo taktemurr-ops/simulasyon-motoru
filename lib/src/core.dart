@@ -409,15 +409,45 @@ mixin SimClock<T extends StatefulWidget> on State<T> {
   Timer? _loop;
   final List<Timer> _later = [];
 
+  AppLifecycleListener? _life;
+  bool _background = false;
+  int _bgAt = 0;
+
+  /// Oyun şu an duraklı mı: uygulama arka planda ya da oyunun üstünde başka
+  /// bir sayfa/pencere (duraklatma menüsü, reklam, ayarlar) açık. Bu sürede
+  /// saat ve oyun döngüsü ilerlemez (müşteriler beklemez, süre işlemez).
+  bool get held => _background || (mounted && ModalRoute.of(context)?.isCurrent == false);
+
+  /// Uygulama arka plandan [away] saniye sonra döndü (en az 20 sn, en çok 2 sa).
+  /// Boşta oyunlar çevrimdışı kazancı burada verir.
+  void onAway(int away) {}
+
+  /// Uygulama arka plana geçmek üzere: durum kaydedilebilir.
+  void onBackground() {}
+
+  void _onLife(AppLifecycleState st) {
+    final bg = st != AppLifecycleState.resumed;
+    if (bg == _background) return;
+    _background = bg;
+    if (bg) {
+      _bgAt = DateTime.now().millisecondsSinceEpoch;
+      if (!ended && mounted) onBackground();
+    } else if (!ended && mounted) {
+      final away = (DateTime.now().millisecondsSinceEpoch - _bgAt) ~/ 1000;
+      if (away >= 20) setState(() => onAway(clampI(away, 0, 7200)));
+    }
+  }
+
   /// [onTick] her [ms] milisaniyede bir çağrılır (oyun döngüsü).
   void startLoop(int ms, void Function(double dt) onTick) {
     _sec?.cancel();
     _loop?.cancel();
+    _life ??= AppLifecycleListener(onStateChange: _onLife);
     _sec = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (!ended && mounted) seconds++;
+      if (!ended && mounted && !held) seconds++;
     });
     _loop = Timer.periodic(Duration(milliseconds: ms), (_) {
-      if (!ended && mounted) setState(() => onTick(ms / 1000));
+      if (!ended && mounted && !held) setState(() => onTick(ms / 1000));
     });
   }
 
@@ -434,6 +464,7 @@ mixin SimClock<T extends StatefulWidget> on State<T> {
 
   @override
   void dispose() {
+    _life?.dispose();
     _sec?.cancel();
     _loop?.cancel();
     for (final t in _later) {
