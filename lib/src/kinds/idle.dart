@@ -167,19 +167,28 @@ class _IdleViewState extends State<IdleView> with SimClock<IdleView> {
     taps = intOf(m['taps'], 0);
     eventIdx = intOf(m['ev'], 0);
     final away = play.awaySeconds();
-    if (away >= 20) {
-      final gain = e.rawOf(e.n) * e.extra * away * 0.5;
-      if (z.harvest && !e.auto) {
-        e.store = math.min(e.store + gain, e.storeCap);
-      } else {
-        e.earn(gain);
-      }
-      if (gain >= 1) {
-        note = st(lang, 'offline').replaceAll('{0}', fmtNum(gain));
-        noteUntil = e.t + 8;
-      }
+    if (away >= 20) _grantAway(away);
+  }
+
+  /// Çevrimdışı kazanç: geçen sürenin yarısı kadar üretim (en çok 2 saat).
+  void _grantAway(int away) {
+    final gain = e.rawOf(e.n) * e.extra * away * 0.5;
+    if (z.harvest && !e.auto) {
+      e.store = math.min(e.store + gain, e.storeCap);
+    } else {
+      e.earn(gain);
+    }
+    if (gain >= 1) {
+      note = st(lang, 'offline').replaceAll('{0}', fmtNum(gain));
+      noteUntil = e.t + 8;
     }
   }
+
+  @override
+  void onAway(int away) => _grantAway(away);
+
+  @override
+  void onBackground() => _save();
 
   void _save() {
     play.save({
