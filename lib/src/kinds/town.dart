@@ -490,8 +490,22 @@ class _TownPainter extends CustomPainter {
         if (hsh % 5 == 0) {
           final o = r.topLeft + Offset(r.width * (0.25 + (hsh % 7) / 14), r.height * (0.3 + (hsh % 5) / 10));
           if (season == 3) {
-            c.drawOval(Rect.fromCenter(center: o, width: cs * 0.28, height: cs * 0.12), fill(Colors.white));
-            c.drawOval(Rect.fromCenter(center: o + Offset(0, cs * 0.04), width: cs * 0.3, height: cs * 0.06), fill(const Color(0x22000000)));
+            // Karlı küçük çam.
+            final tw = cs * 0.22, th = cs * 0.3;
+            c.drawPath(
+                Path()
+                  ..moveTo(o.dx, o.dy - th)
+                  ..lineTo(o.dx - tw / 2, o.dy)
+                  ..lineTo(o.dx + tw / 2, o.dy)
+                  ..close(),
+                fill(const Color(0xFF2F5D50)));
+            c.drawPath(
+                Path()
+                  ..moveTo(o.dx, o.dy - th)
+                  ..lineTo(o.dx - tw / 4, o.dy - th / 2)
+                  ..lineTo(o.dx + tw / 4, o.dy - th / 2)
+                  ..close(),
+                fill(Colors.white));
           } else {
             final tuft = Color.lerp(look.ground, Colors.black, 0.25)!;
             for (final dx in const [-0.06, 0.0, 0.06]) {
