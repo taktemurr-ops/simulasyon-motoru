@@ -389,10 +389,26 @@ class _KitchenViewState extends State<_KitchenView> with SimClock<_KitchenView> 
         Expanded(
           child: gaugeStep >= 0
               ? _gauge()
-              : Center(
-                  child: Text(verdict.isEmpty ? st(lang, 'orderHint') : verdict,
-                      textAlign: TextAlign.center, style: TextStyle(fontSize: 15, color: scheme.onSurface.withValues(alpha: 0.8))),
-                ),
+              : Stack(children: [
+                  // Mutfak tezgâhı: kiremit duvar, ahşap tezgâh, ocakta tencere
+                  // (tarif ilerledikçe dolar ve buharlanır), kesme tahtası.
+                  Positioned.fill(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: CustomPaint(painter: _KitchenScene(rc.steps.isEmpty ? 0 : timeline.length / rc.steps.length, seconds)),
+                    ),
+                  ),
+                  Align(
+                    alignment: const Alignment(0, -0.85),
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 10),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.45), borderRadius: BorderRadius.circular(12)),
+                      child: Text(verdict.isEmpty ? st(lang, 'orderHint') : verdict,
+                          textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: scheme.onSurface.withValues(alpha: 0.92))),
+                    ),
+                  ),
+                ]),
         ),
       ]),
     );
@@ -486,4 +502,62 @@ class _GaugePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _GaugePainter old) => true;
+}
+
+/// Yemek yapma sahnesi (süs): tarifin ilerleyişini tencerede gösterir.
+class _KitchenScene extends CustomPainter {
+  final double progress;
+  final int seconds;
+  _KitchenScene(this.progress, this.seconds);
+
+  @override
+  void paint(Canvas c, Size s) {
+    final w = s.width, h = s.height;
+    // Duvar: krem kiremitler.
+    c.drawRect(Offset.zero & s, fill(const Color(0xFFF3E9DA)));
+    final tile = stroke(const Color(0x22000000), 1);
+    final ts = math.max(18.0, w / 12);
+    for (var y = 0.0; y < h * 0.62; y += ts) {
+      c.drawLine(Offset(0, y), Offset(w, y), tile);
+    }
+    for (var x = 0.0; x < w; x += ts) {
+      c.drawLine(Offset(x, 0), Offset(x, h * 0.62), tile);
+    }
+    // Raf ve kavanozlar.
+    c.drawRect(Rect.fromLTWH(w * 0.08, h * 0.34, w * 0.4, 6), fill(const Color(0xFF9C6B3F)));
+    for (var k = 0; k < 3; k++) {
+      final jx = w * (0.12 + k * 0.12);
+      c.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(jx, h * 0.34 - 26, 18, 26), const Radius.circular(4)),
+          fill([const Color(0xFFE9C46A), const Color(0xFFC8553D), const Color(0xFF6B9080)][k]));
+    }
+    // Tezgâh.
+    final top = h * 0.62;
+    c.drawRect(Rect.fromLTWH(0, top, w, h - top), fill(const Color(0xFFB07B4F)));
+    c.drawRect(Rect.fromLTWH(0, top, w, 8), fill(const Color(0xFF8A5A33)));
+    // Kesme tahtası ve bıçak.
+    final board = RRect.fromRectAndRadius(Rect.fromLTWH(w * 0.08, top + 14, w * 0.34, (h - top) * 0.42), const Radius.circular(8));
+    c.drawRRect(board, fill(const Color(0xFFE0B887)));
+    c.drawLine(Offset(w * 0.14, top + 24), Offset(w * 0.34, top + 24), stroke(const Color(0xFFB0BEC5), 4));
+    // Ocak ve tencere.
+    final cx = w * 0.7, base = top + 6;
+    c.drawRect(Rect.fromCenter(center: Offset(cx, base + 4), width: w * 0.36, height: 10), fill(const Color(0xFF37474F)));
+    final pot = Rect.fromCenter(center: Offset(cx, base - h * 0.09), width: w * 0.26, height: h * 0.17);
+    c.drawRRect(RRect.fromRectAndRadius(pot, const Radius.circular(10)), fill(const Color(0xFF78909C)));
+    final p = progress.clamp(0.0, 1.0);
+    if (p > 0) {
+      final f = Rect.fromLTRB(pot.left + 5, pot.bottom - (pot.height - 10) * p - 5, pot.right - 5, pot.bottom - 5);
+      c.drawRRect(RRect.fromRectAndRadius(f, const Radius.circular(6)), fill(const Color(0xFFF4A261)));
+      // Buhar.
+      for (var k = 0; k < 3; k++) {
+        final sx = pot.left + pot.width * (0.25 + k * 0.25);
+        final ph = (seconds + k) % 3;
+        c.drawCircle(Offset(sx, pot.top - 10 - ph * 8.0), 6 + ph * 2.0, fill(Colors.white.withValues(alpha: 0.45 - ph * 0.12)));
+      }
+    }
+    c.drawRect(Rect.fromLTWH(pot.left - 8, pot.top, 8, 6), fill(const Color(0xFF546E7A)));
+    c.drawRect(Rect.fromLTWH(pot.right, pot.top, 8, 6), fill(const Color(0xFF546E7A)));
+  }
+
+  @override
+  bool shouldRepaint(covariant _KitchenScene old) => old.progress != progress || old.seconds != seconds;
 }
