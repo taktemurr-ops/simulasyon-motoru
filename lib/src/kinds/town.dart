@@ -486,9 +486,9 @@ class _TownPainter extends CustomPainter {
       final shade = ((i % n) + (i ~/ n)).isEven ? 0.0 : 0.06;
       c.drawRect(r.deflate(1), fill(Color.lerp(Color.lerp(look.ground, Colors.white, season == 3 ? 0.35 : 0.15)!, Colors.black, shade)!));
       if (v < 0) {
-        final hsh = (i * 2654435761) & 0xFFFF;
-        if (hsh % 5 == 0) {
-          final o = r.topLeft + Offset(r.width * (0.25 + (hsh % 7) / 14), r.height * (0.3 + (hsh % 5) / 10));
+        final hsh = (i * 37 + (i ~/ n) * 11 + n * 3) % 97;
+        if (hsh % 4 == 0) {
+          final o = r.topLeft + Offset(r.width * (0.3 + (hsh % 7) / 16), r.height * (0.55 + (hsh % 5) / 14));
           if (season == 3) {
             // Karlı küçük çam.
             final tw = cs * 0.22, th = cs * 0.3;
@@ -512,7 +512,7 @@ class _TownPainter extends CustomPainter {
               c.drawLine(o + Offset(cs * dx, 0), o + Offset(cs * dx * 1.6, -cs * 0.12), stroke(tuft, 1.6));
             }
           }
-        } else if (hsh % 11 == 3) {
+        } else if (hsh % 9 == 5) {
           final o = r.topLeft + Offset(r.width * 0.68, r.height * 0.7);
           c.drawOval(Rect.fromCenter(center: o, width: cs * 0.16, height: cs * 0.1), fill(const Color(0xFF9AA0A6)));
         }
