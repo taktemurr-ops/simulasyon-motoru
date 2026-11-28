@@ -385,7 +385,7 @@ class _IdleViewState extends State<IdleView> with SimClock<IdleView> {
         child: Text(
             theme == IdleTheme.zoo
                 ? '🥕 ${st(lang, 'feed')} ${(e.clean * 100).round()}%'
-                : '🫧 ${st(lang, 'clean')} ${(e.clean * 100).round()}%',
+                : '🧽 ${st(lang, 'clean')} ${(e.clean * 100).round()}%',
             style: const TextStyle(fontWeight: FontWeight.w700)),
       ));
     }
@@ -461,7 +461,7 @@ class _IdleViewState extends State<IdleView> with SimClock<IdleView> {
   String _upgSymbol(Upg u) => switch (u.target) {
         -1 => '✨',
         -2 => '👆',
-        -3 => z.harvest ? '🚜' : (theme == IdleTheme.zoo ? '🥕' : '🫧'),
+        -3 => z.harvest ? '🚜' : (theme == IdleTheme.zoo ? '🥕' : '🧽'),
         _ => idleEmoji(theme, u.target, z),
       };
 
